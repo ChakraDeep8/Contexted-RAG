@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     dense_threshold: float = Field(default=0.35, ge=0, le=1)
     host: str = "127.0.0.1"
     port: int = Field(default=8000, ge=1, le=65535)
+    max_upload_mb: int = Field(default=100, ge=1, le=2048)
 
     @property
     def database_path(self) -> Path:

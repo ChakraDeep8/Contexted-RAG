@@ -2,6 +2,37 @@
   display: none;
 }
 
+.source-actions {
+  display: flex;
+  gap: 8px;
+}
+
+#upload {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: #1e6545;
+  color: white;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+#upload:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+#upload-status {
+  display: block;
+  min-height: 18px;
+  color: #68716b;
+  font-size: 12px;
+}
+
+#upload-status.error {
+  color: #872e20;
+}
+
 @media (max-width: 760px) {
   header {
     height: 86px;
@@ -18,5 +49,11 @@
 
   .mobile-tabs .nav {
     padding: 6px 9px;
+  }
+
+  .source-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
   }
 }

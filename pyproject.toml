@@ -16,6 +16,7 @@ dependencies = [
   "onnxruntime==1.31.0",
   "platformdirs==4.5.0",
   "pydantic-settings==2.14.0",
+  "python-multipart==0.0.22",
   "qdrant-client==1.19.1",
   "rapidocr==3.10.0",
   "rich==14.2.0",

@@ -50,7 +50,14 @@
       </section>
 
       <section id="sources-view" class="view">
-        <div class="source-head"><p>Files discovered in <code>Context-fetcher/</code></p><button id="refresh">Refresh</button></div>
+        <div class="source-head">
+          <div><p>Files stored in <code>Context-fetcher/</code></p><span id="upload-status" role="status"></span></div>
+          <div class="source-actions">
+            <input id="file-picker" type="file" accept=".pdf,.xlsx,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp" multiple hidden>
+            <button id="upload">＋ Add documents</button>
+            <button id="refresh">Refresh</button>
+          </div>
+        </div>
         <div id="source-list" class="source-list"></div>
       </section>
     </main>

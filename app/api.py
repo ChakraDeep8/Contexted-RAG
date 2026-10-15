@@ -3,12 +3,13 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import uuid
 from contextlib import asynccontextmanager
 from dataclasses import asdict
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -17,6 +18,7 @@ from watchfiles import awatch
 from .chat import ChatService, LLMError, OpenAICompatibleClient, REFUSAL
 from .config import Settings
 from .services import ApplicationServices
+from .utils import SUPPORTED_EXTENSIONS
 
 LOGGER = logging.getLogger(__name__)
 WEB_DIR = Path(__file__).parent / "web"
@@ -89,6 +91,42 @@ def create_app(settings: Settings | None = None, services: ApplicationServices |
         changed, embedded = await asyncio.to_thread(services.reconcile)
         return {"changed_files": changed, "embedded_chunks": embedded}
 
+    @app.post("/api/sources/upload")
+    async def upload_sources(files: list[UploadFile] = File(...)):
+        if not files:
+            raise HTTPException(400, "Choose at least one document")
+        prepared: list[tuple[UploadFile, str]] = []
+        for upload in files:
+            name = Path(upload.filename or "").name.strip()
+            if not name or name in {".", ".."} or Path(name).suffix.lower() not in SUPPORTED_EXTENSIONS:
+                allowed = ", ".join(sorted(SUPPORTED_EXTENSIONS))
+                raise HTTPException(400, f"Unsupported file '{name or 'unnamed'}'. Allowed: {allowed}")
+            prepared.append((upload, name))
+
+        saved: list[str] = []
+        limit = settings.max_upload_mb * 1024 * 1024
+        for upload, original_name in prepared:
+            destination = _available_destination(settings.source_dir, original_name)
+            temporary = destination.with_name(f".{destination.name}.{uuid.uuid4().hex}.uploading")
+            size = 0
+            try:
+                with temporary.open("wb") as output:
+                    while chunk := await upload.read(1024 * 1024):
+                        size += len(chunk)
+                        if size > limit:
+                            raise HTTPException(
+                                413, f"'{original_name}' exceeds the {settings.max_upload_mb} MB limit"
+                            )
+                        output.write(chunk)
+                os.replace(temporary, destination)
+                saved.append(destination.name)
+            finally:
+                await upload.close()
+                temporary.unlink(missing_ok=True)
+
+        changed, embedded = await asyncio.to_thread(services.reconcile)
+        return {"files": saved, "changed_files": changed, "embedded_chunks": embedded}
+
     @app.post("/api/index/retry/{file_id}")
     async def retry(file_id: int):
         record = next((item for item in services.repository.list_files() if item.id == file_id), None)
@@ -138,4 +176,17 @@ def create_app(settings: Settings | None = None, services: ApplicationServices |
 
 
 app = create_app()
+
+
+def _available_destination(directory: Path, filename: str) -> Path:
+    destination = directory / filename
+    if not destination.exists():
+        return destination
+    stem, suffix = destination.stem, destination.suffix
+    counter = 2
+    while True:
+        candidate = directory / f"{stem} ({counter}){suffix}"
+        if not candidate.exists():
+            return candidate
+        counter += 1
 

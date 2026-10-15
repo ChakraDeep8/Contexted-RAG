@@ -40,7 +40,7 @@ The default endpoint is Groq. Any OpenAI-compatible provider can be used by chan
 
 ## Run the application
 
-Place supported files in `Context-fetcher/`, then start the local app:
+Add supported files from the **Sources → Add documents** button, or place them directly in `Context-fetcher/`, then start the local app:
 
 ```powershell
 python -m app serve
