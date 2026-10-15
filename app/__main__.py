@@ -23,6 +23,10 @@ def build_parser() -> argparse.ArgumentParser:
     subcommands.add_parser("ingest", help="Reconcile the source folder once")
     subcommands.add_parser("watch", help="Reconcile, then continuously monitor the folder")
     subcommands.add_parser("status", help="Show indexed and failed files")
+    subcommands.add_parser("index", help="Create embeddings for pending chunks")
+    search_parser = subcommands.add_parser("search", help="Test hybrid retrieval")
+    search_parser.add_argument("query")
+    subcommands.add_parser("serve", help="Run the local web application")
     inspect_parser = subcommands.add_parser("inspect", help="Show chunks and citations for a file")
     inspect_parser.add_argument("file", help="Relative path or unique filename")
     return parser
@@ -100,7 +104,35 @@ def main(argv: list[str] | None = None) -> int:
                 CONSOLE.print(f"             [red]{result.error}[/red]")
         if not results:
             CONSOLE.print("Everything is up to date.")
+        if any(True for _ in pipeline.repository.chunks_requiring_embeddings(1)):
+            from .services import ApplicationServices
+
+            embedded = ApplicationServices(settings).retriever.index_pending()
+            CONSOLE.print(f"Embedded {embedded} chunks for retrieval.")
         return 1 if any(result.state.value == "failed" for result in results) else 0
+    if args.command == "index":
+        from .services import ApplicationServices
+
+        services = ApplicationServices(settings)
+        count = services.retriever.index_pending()
+        CONSOLE.print(f"Indexed {count} pending chunks.")
+        return 0
+    if args.command == "search":
+        from .services import ApplicationServices
+
+        services = ApplicationServices(settings)
+        services.retriever.index_pending()
+        hits = services.retriever.search(args.query, settings.retrieval_limit)
+        for index, hit in enumerate(hits, 1):
+            loc = hit.chunk.location
+            CONSOLE.rule(f"{index}. {hit.file.path} · page {loc.page or '-'} · score {hit.score:.4f}")
+            CONSOLE.print(hit.chunk.text)
+        return 0
+    if args.command == "serve":
+        import uvicorn
+
+        uvicorn.run("app.api:app", host=settings.host, port=settings.port, reload=False)
+        return 0
     if args.command == "watch":
         try:
             asyncio.run(pipeline.watch())

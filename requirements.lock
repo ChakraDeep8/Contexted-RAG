@@ -7,12 +7,15 @@
 accelerate==1.15.0
     # via docling-slim
 annotated-doc==0.0.5
-    # via typer
+    # via
+    #   fastapi
+    #   typer
 annotated-types==0.8.0
     # via pydantic
 anyio==4.15.1
     # via
     #   httpx
+    #   starlette
     #   watchfiles
 attrs==26.1.0
     # via
@@ -32,9 +35,11 @@ click==8.5.0
     # via
     #   huggingface-hub
     #   python-oxmsg
+    #   uvicorn
 colorama==0.4.6
     # via
     #   colorlog
+    #   loguru
     #   pytest
     #   tqdm
     #   typer
@@ -51,7 +56,7 @@ dill==0.4.1
 doclang==0.7.3
     # via docling-core
 docling==2.139.0
-    # via context-ingestion (pyproject.toml)
+    # via contexted-rag (pyproject.toml)
 docling-core==2.101.1
     # via
     #   docling-parse
@@ -66,6 +71,10 @@ et-xmlfile==2.0.0
     # via openpyxl
 faker==40.43.0
     # via polyfactory
+fastapi==0.143.2
+    # via contexted-rag (pyproject.toml)
+fastembed==0.9.0
+    # via contexted-rag (pyproject.toml)
 filelock==4.2.0
     # via
     #   huggingface-hub
@@ -78,23 +87,36 @@ fsspec==2026.9.0
     # via
     #   huggingface-hub
     #   torch
+grpcio==1.84.0
+    # via qdrant-client
 h11==0.16.0
-    # via httpcore
+    # via
+    #   httpcore
+    #   uvicorn
+h2==4.4.1
+    # via httpx
 hf-xet==1.7.0
     # via huggingface-hub
+hpack==4.2.0
+    # via h2
 httpcore==1.0.9
     # via httpx
 httpx==0.28.1
     # via
+    #   contexted-rag (pyproject.toml)
     #   docling-slim
     #   huggingface-hub
+    #   qdrant-client
 huggingface-hub==1.33.0
     # via
     #   accelerate
     #   docling-ibm-models
     #   docling-slim
+    #   fastembed
     #   tokenizers
     #   transformers
+hyperframe==6.1.0
+    # via h2
 idna==3.20
     # via
     #   anyio
@@ -114,6 +136,8 @@ langcodes==3.5.1
     # via docling-slim
 latex2mathml==3.81.1
     # via docling-core
+loguru==0.7.3
+    # via fastembed
 lxml==6.1.3
     # via
     #   doclang
@@ -129,6 +153,8 @@ markupsafe==3.0.4
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
+mmh3==5.3.1
+    # via fastembed
 mpire==2.10.2
     # via semchunk
 mpmath==1.3.0
@@ -142,9 +168,11 @@ numpy==2.4.6
     #   accelerate
     #   docling-ibm-models
     #   docling-slim
+    #   fastembed
     #   onnxruntime
     #   opencv-python-headless
     #   pandas
+    #   qdrant-client
     #   rapidocr
     #   safetensors
     #   scipy
@@ -156,13 +184,17 @@ olefile==0.47
 omegaconf==2.4.0
     # via rapidocr
 onnxruntime==1.31.0
-    # via context-ingestion (pyproject.toml)
+    # via
+    #   contexted-rag (pyproject.toml)
+    #   fastembed
 opencv-python-headless==5.0.0.93
     # via rapidocr
 openpyxl==3.1.5
     # via
-    #   context-ingestion (pyproject.toml)
+    #   contexted-rag (pyproject.toml)
     #   docling-slim
+opentelemetry-api==1.45.1
+    # via fastapi
 packaging==26.3
     # via
     #   accelerate
@@ -178,11 +210,12 @@ pillow==12.3.0
     #   docling-ibm-models
     #   docling-parse
     #   docling-slim
+    #   fastembed
     #   python-pptx
     #   rapidocr
     #   torchvision
 platformdirs==4.5.0
-    # via context-ingestion (pyproject.toml)
+    # via contexted-rag (pyproject.toml)
 pluggy==1.7.0
     # via
     #   docling-slim
@@ -190,10 +223,16 @@ pluggy==1.7.0
     #   pytest-cov
 polyfactory==3.3.0
     # via docling-slim
+portalocker==3.2.0
+    # via qdrant-client
 protobuf==7.36.2
-    # via onnxruntime
+    # via
+    #   onnxruntime
+    #   qdrant-client
 psutil==7.2.2
     # via accelerate
+py-rust-stemmers==0.1.8
+    # via fastembed
 pyclipper==1.4.0
     # via rapidocr
 pydantic==2.14.1
@@ -201,12 +240,14 @@ pydantic==2.14.1
     #   docling-core
     #   docling-parse
     #   docling-slim
+    #   fastapi
     #   pydantic-settings
+    #   qdrant-client
 pydantic-core==2.50.1
     # via pydantic
 pydantic-settings==2.14.0
     # via
-    #   context-ingestion (pyproject.toml)
+    #   contexted-rag (pyproject.toml)
     #   docling-core
     #   docling-slim
 pygments==2.21.0
@@ -220,10 +261,13 @@ pypdfium2==5.14.0
     # via docling-slim
 pytest==8.4.2
     # via
-    #   context-ingestion (pyproject.toml)
+    #   contexted-rag (pyproject.toml)
+    #   pytest-asyncio
     #   pytest-cov
+pytest-asyncio==1.2.0
+    # via contexted-rag (pyproject.toml)
 pytest-cov==7.0.0
-    # via context-ingestion (pyproject.toml)
+    # via contexted-rag (pyproject.toml)
 python-dateutil==2.9.0.post0
     # via pandas
 python-docx==1.2.0
@@ -240,6 +284,7 @@ pywin32==312
     # via
     #   docling-parse
     #   mpire
+    #   portalocker
 pyyaml==6.0.3
     # via
     #   accelerate
@@ -248,9 +293,11 @@ pyyaml==6.0.3
     #   omegaconf
     #   rapidocr
     #   transformers
+qdrant-client==1.19.1
+    # via contexted-rag (pyproject.toml)
 rapidocr==3.10.0
     # via
-    #   context-ingestion (pyproject.toml)
+    #   contexted-rag (pyproject.toml)
     #   docling-slim
 referencing==0.37.0
     # via
@@ -262,10 +309,11 @@ requests==2.34.2
     # via
     #   docling-core
     #   docling-slim
+    #   fastembed
     #   rapidocr
 rich==14.2.0
     # via
-    #   context-ingestion (pyproject.toml)
+    #   contexted-rag (pyproject.toml)
     #   docling-slim
     #   typer
 rpds-py==2026.9.1
@@ -293,12 +341,16 @@ six==1.17.0
     #   rapidocr
 soupsieve==3.0.3
     # via beautifulsoup4
+starlette==1.8.0
+    # via fastapi
 sympy==1.14.0
     # via torch
 tabulate==0.10.0
     # via docling-core
 tokenizers==0.23.3
-    # via transformers
+    # via
+    #   fastembed
+    #   transformers
 torch==2.14.1
     # via
     #   accelerate
@@ -313,6 +365,7 @@ torchvision==0.29.1
 tqdm==4.70.1
     # via
     #   docling-slim
+    #   fastembed
     #   huggingface-hub
     #   mpire
     #   rapidocr
@@ -343,18 +396,24 @@ typing-extensions==4.16.0
     #   anyio
     #   beautifulsoup4
     #   docling-core
+    #   fastapi
+    #   grpcio
     #   huggingface-hub
+    #   opentelemetry-api
     #   polyfactory
     #   pydantic
     #   pydantic-core
+    #   pytest-asyncio
     #   python-docx
     #   python-oxmsg
     #   python-pptx
     #   referencing
+    #   starlette
     #   torch
     #   typing-inspection
 typing-inspection==0.4.4
     # via
+    #   fastapi
     #   pydantic
     #   pydantic-settings
 tzdata==2026.5
@@ -362,11 +421,17 @@ tzdata==2026.5
     #   faker
     #   pandas
 urllib3==2.8.0
-    # via requests
+    # via
+    #   qdrant-client
+    #   requests
+uvicorn==0.54.0
+    # via contexted-rag (pyproject.toml)
 watchfiles==1.3.0
-    # via context-ingestion (pyproject.toml)
+    # via contexted-rag (pyproject.toml)
 websockets==16.1.1
     # via docling-slim
+win32-setctime==1.2.0
+    # via loguru
 xlsxwriter==3.2.9
     # via python-pptx
 

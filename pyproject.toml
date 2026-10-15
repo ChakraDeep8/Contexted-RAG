@@ -3,23 +3,29 @@ requires = ["hatchling==1.27.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "context-ingestion"
-version = "0.1.0"
-description = "Incremental document ingestion pipeline for a context-only RAG chatbot"
+name = "contexted-rag"
+version = "1.0.0"
+description = "Local-first context-only RAG chatbot with document ingestion and citations"
 requires-python = ">=3.11,<3.13"
 dependencies = [
   "docling==2.139.0",
+  "fastapi==0.143.2",
+  "fastembed==0.9.0",
+  "httpx==0.28.1",
   "openpyxl==3.1.5",
   "onnxruntime==1.31.0",
   "platformdirs==4.5.0",
   "pydantic-settings==2.14.0",
+  "qdrant-client==1.19.1",
   "rapidocr==3.10.0",
   "rich==14.2.0",
+  "uvicorn==0.54.0",
   "watchfiles==1.3.0",
 ]
 
 [project.optional-dependencies]
 dev = [
+  "pytest-asyncio==1.2.0",
   "pytest==8.4.2",
   "pytest-cov==7.0.0",
 ]

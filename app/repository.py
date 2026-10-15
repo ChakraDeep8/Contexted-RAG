@@ -69,6 +69,26 @@ CREATE TABLE IF NOT EXISTS ingestion_jobs (
     error TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_jobs_path ON ingestion_jobs(path, id DESC);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(
+    chunk_id UNINDEXED,
+    text,
+    tokenize='porter unicode61'
+);
+
+CREATE TABLE IF NOT EXISTS conversations (
+    id TEXT PRIMARY KEY,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS messages (
+    id INTEGER PRIMARY KEY,
+    conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    role TEXT NOT NULL,
+    content TEXT NOT NULL,
+    citations TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL
+);
 """
 
 
@@ -90,6 +110,11 @@ class SQLiteRepository:
             connection.execute(
                 "UPDATE files SET state=? WHERE state=? AND chunk_count=0",
                 (FileState.PENDING, FileState.PROCESSING),
+            )
+            connection.execute(
+                """INSERT INTO chunks_fts(chunk_id,text)
+                   SELECT c.id,c.text FROM chunks c
+                   WHERE NOT EXISTS (SELECT 1 FROM chunks_fts f WHERE f.chunk_id=c.id)"""
             )
 
     def _connect(self) -> sqlite3.Connection:
@@ -194,6 +219,10 @@ class SQLiteRepository:
                  len(chunks), now, now, now),
             )
             file_id = connection.execute("SELECT id FROM files WHERE path=?", (path,)).fetchone()[0]
+            connection.execute(
+                "DELETE FROM chunks_fts WHERE chunk_id IN (SELECT id FROM chunks WHERE file_id=?)",
+                (file_id,),
+            )
             connection.execute("DELETE FROM chunks WHERE file_id=?", (file_id,))
             for chunk in chunks:
                 connection.execute(
@@ -201,6 +230,9 @@ class SQLiteRepository:
                                           heading_path,needs_embedding) VALUES(?,?,?,?,?,?,?,?,?)""",
                     (chunk.id, file_id, chunk.file_hash, chunk.sequence, chunk.text, chunk.token_count,
                      chunk.kind, json.dumps(chunk.heading_path), int(chunk.needs_embedding)),
+                )
+                connection.execute(
+                    "INSERT INTO chunks_fts(chunk_id,text) VALUES(?,?)", (chunk.id, chunk.text)
                 )
                 loc = chunk.location
                 connection.execute(
@@ -223,6 +255,10 @@ class SQLiteRepository:
             if not row:
                 return None
             content_hash = row["content_hash"]
+            connection.execute(
+                "DELETE FROM chunks_fts WHERE chunk_id IN (SELECT id FROM chunks WHERE file_id=(SELECT id FROM files WHERE path=?))",
+                (path,),
+            )
             connection.execute("DELETE FROM files WHERE path=?", (path,))
             remaining = connection.execute(
                 "SELECT 1 FROM files WHERE content_hash=? LIMIT 1", (content_hash,)
@@ -254,6 +290,56 @@ class SQLiteRepository:
             suffix += " LIMIT ?"
             parameters = (limit,)
         yield from self._query_chunks(suffix, parameters)
+
+    def mark_chunks_embedded(self, chunk_ids: list[str]) -> None:
+        if not chunk_ids:
+            return
+        placeholders = ",".join("?" for _ in chunk_ids)
+        with self._connect() as connection:
+            connection.execute(
+                f"UPDATE chunks SET needs_embedding=0 WHERE id IN ({placeholders})", chunk_ids
+            )
+
+    def lexical_search(self, query: str, limit: int = 20) -> list[tuple[str, float]]:
+        import re
+
+        terms = re.findall(r"[\w-]+", query, flags=re.UNICODE)
+        if not terms:
+            return []
+        expression = " OR ".join(f'"{term}"' for term in terms[:24])
+        with self._connect() as connection:
+            rows = connection.execute(
+                """SELECT chunk_id, bm25(chunks_fts) AS score FROM chunks_fts
+                   WHERE chunks_fts MATCH ? ORDER BY score LIMIT ?""",
+                (expression, limit),
+            ).fetchall()
+        return [(row["chunk_id"], float(row["score"])) for row in rows]
+
+    def save_message(
+        self, conversation_id: str, role: str, content: str, citations: list[dict] | None = None
+    ) -> None:
+        now = _now()
+        with self._connect() as connection:
+            connection.execute(
+                "INSERT OR IGNORE INTO conversations(id,created_at,updated_at) VALUES(?,?,?)",
+                (conversation_id, now, now),
+            )
+            connection.execute(
+                "UPDATE conversations SET updated_at=? WHERE id=?", (now, conversation_id)
+            )
+            connection.execute(
+                "INSERT INTO messages(conversation_id,role,content,citations,created_at) VALUES(?,?,?,?,?)",
+                (conversation_id, role, content, json.dumps(citations or []), now),
+            )
+
+    def conversation_history(self, conversation_id: str, limit: int = 8) -> list[dict[str, str]]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                """SELECT role,content FROM messages WHERE conversation_id=?
+                   ORDER BY id DESC LIMIT ?""",
+                (conversation_id, limit),
+            ).fetchall()
+        return [{"role": row["role"], "content": row["content"]} for row in reversed(rows)]
 
     def resolve_chunk(self, chunk_id: str) -> tuple[FileRecord, ContextChunk] | None:
         with self._connect() as connection:

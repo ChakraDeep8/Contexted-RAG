@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Ask questions grounded in your local documents.">
+    <title>Contexted RAG</title>
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/styles.css">
+  <link rel="stylesheet" href="/assets/mobile.css">
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <div class="brand"><span class="mark">C</span><div><strong>Contexted</strong><small>Local knowledge</small></div></div>
+      <button id="new-chat" class="new-chat">＋ New conversation</button>
+      <nav>
+        <button class="nav active" data-view="chat">Chat <span>⌘</span></button>
+        <button class="nav" data-view="sources">Sources <span id="source-count">0</span></button>
+      </nav>
+      <div class="index-card">
+        <div class="status-row"><span class="pulse"></span><strong>Knowledge index</strong></div>
+        <p id="index-summary">Checking documents…</p>
+        <button id="reindex">Sync folder</button>
+      </div>
+      <p class="privacy">Files and embeddings stay on this computer. Only retrieved excerpts are sent to your configured answer provider.</p>
+    </aside>
+
+    <main>
+      <header><div><p class="eyebrow">CONTEXT-ONLY ASSISTANT</p><h1 id="view-title">Ask your documents</h1></div><div class="mobile-tabs"><button class="nav active" data-view="chat">Chat</button><button class="nav" data-view="sources">Sources</button></div><span id="provider" class="provider">Checking provider</span></header>
+
+      <section id="chat-view" class="view active">
+        <div id="messages" class="messages">
+          <div class="welcome">
+            <div class="orb">C</div>
+            <h2>Answers with receipts.</h2>
+            <p>I’ll answer only from your indexed files and show exactly where each claim came from.</p>
+            <div class="prompts">
+              <button>Summarize the key points across my documents</button>
+              <button>What dates or deadlines are mentioned?</button>
+              <button>Compare the information in my sources</button>
+            </div>
+          </div>
+        </div>
+        <form id="composer">
+          <textarea id="question" rows="1" maxlength="4000" placeholder="Ask something about your documents…" required></textarea>
+          <button id="send" type="submit" aria-label="Send question">↑</button>
+          <div class="composer-meta"><span>Answers are limited to indexed context</span><span><kbd>Enter</kbd> send · <kbd>Shift Enter</kbd> newline</span></div>
+        </form>
+      </section>
+
+      <section id="sources-view" class="view">
+        <div class="source-head"><p>Files discovered in <code>Context-fetcher/</code></p><button id="refresh">Refresh</button></div>
+        <div id="source-list" class="source-list"></div>
+      </section>
+    </main>
+  </div>
+  <script src="/assets/app.js"></script>
+</body>
+</html>

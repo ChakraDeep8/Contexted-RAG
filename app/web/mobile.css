@@ -1,0 +1,22 @@
+.mobile-tabs {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  header {
+    height: 86px;
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .mobile-tabs {
+    display: flex;
+    padding: 3px;
+    border-radius: 9px;
+    background: #e6e3db;
+  }
+
+  .mobile-tabs .nav {
+    padding: 6px 9px;
+  }
+}

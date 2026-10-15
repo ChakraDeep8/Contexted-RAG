@@ -20,6 +20,14 @@ class Settings(BaseSettings):
     retry_attempts: int = Field(default=3, ge=1)
     retry_base_seconds: float = Field(default=1.0, ge=0)
     log_level: str = "INFO"
+    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    llm_base_url: str = "https://api.groq.com/openai/v1"
+    llm_api_key: str = ""
+    llm_model: str = "openai/gpt-oss-20b"
+    retrieval_limit: int = Field(default=6, ge=1, le=20)
+    dense_threshold: float = Field(default=0.35, ge=0, le=1)
+    host: str = "127.0.0.1"
+    port: int = Field(default=8000, ge=1, le=65535)
 
     @property
     def database_path(self) -> Path:
@@ -28,6 +36,14 @@ class Settings(BaseSettings):
     @property
     def artifact_dir(self) -> Path:
         return self.data_dir / "extracted"
+
+    @property
+    def vector_dir(self) -> Path:
+        return self.data_dir / "qdrant"
+
+    @property
+    def model_dir(self) -> Path:
+        return self.data_dir / "models"
 
     def prepare(self) -> None:
         self.source_dir.mkdir(parents=True, exist_ok=True)
